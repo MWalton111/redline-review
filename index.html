@@ -1,0 +1,1717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- your keys live in config.js and are NOT overwritten by app updates -->
+<script src="config.js"></script>
+<title>Redline</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js"></script>
+
+</head>
+<body style="margin:0">
+<style>
+  :root{
+    --bg:#F3F5FA; --panel:#FFFFFF; --panel-2:#FAFBFE; --rail:#EDF0F7;
+    --border:#E1E5F0; --border-strong:#CBD2E3;
+    --text:#131828; --dim:#58617A; --faint:#8992A8;
+    --accent:#4F46E5; --accent-hi:#6366F1; --accent-soft:#EEEFFE; --on-accent:#FFFFFF;
+    --ok:#0E9A6C; --ok-soft:#E4F7EF; --warn:#C2700A; --warn-soft:#FDF3E3; --danger:#D12E2E;
+    --shadow:0 1px 2px rgba(17,24,48,.05), 0 8px 24px -12px rgba(17,24,48,.18);
+    --shadow-lg:0 2px 4px rgba(17,24,48,.06), 0 24px 48px -20px rgba(17,24,48,.30);
+    --grid:rgba(19,24,40,.045);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#080B14; --panel:#101522; --panel-2:#151B2B; --rail:#0C111C;
+      --border:#222A3E; --border-strong:#38415A;
+      --text:#E7EAF3; --dim:#99A2B9; --faint:#6A7389;
+      --accent:#7C87F6; --accent-hi:#949DFA; --accent-soft:#1B2047; --on-accent:#0A0D18;
+      --ok:#35D6A0; --ok-soft:#0E2A22; --warn:#E9A13B; --warn-soft:#2B2113; --danger:#F2726E;
+      --shadow:0 1px 2px rgba(0,0,0,.5), 0 8px 24px -12px rgba(0,0,0,.7);
+      --shadow-lg:0 2px 4px rgba(0,0,0,.5), 0 24px 48px -20px rgba(0,0,0,.8);
+      --grid:rgba(231,234,243,.05);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#080B14; --panel:#101522; --panel-2:#151B2B; --rail:#0C111C;
+    --border:#222A3E; --border-strong:#38415A;
+    --text:#E7EAF3; --dim:#99A2B9; --faint:#6A7389;
+    --accent:#7C87F6; --accent-hi:#949DFA; --accent-soft:#1B2047; --on-accent:#0A0D18;
+    --ok:#35D6A0; --ok-soft:#0E2A22; --warn:#E9A13B; --warn-soft:#2B2113; --danger:#F2726E;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 8px 24px -12px rgba(0,0,0,.7);
+    --shadow-lg:0 2px 4px rgba(0,0,0,.5), 0 24px 48px -20px rgba(0,0,0,.8);
+    --grid:rgba(231,234,243,.05);
+  }
+
+  body{ background:var(--bg); color:var(--text);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #root{ min-height:100vh; }
+  .ff-display{ font-family:"Fraunces", ui-serif, Georgia, serif; font-optical-sizing:auto; }
+  .ff-mono{ font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .tnum{ font-variant-numeric: tabular-nums; }
+  .eyebrow{ font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--faint); }
+
+  .surface{ background:var(--panel); border:1px solid var(--border); }
+  .hairline{ border-color:var(--border); }
+
+  .btn{ display:inline-flex; align-items:center; gap:.45rem; border-radius:7px;
+    font-size:13px; font-weight:500; padding:.44rem .7rem; border:1px solid transparent;
+    transition:background .14s ease, border-color .14s ease, color .14s ease; white-space:nowrap; }
+  .btn:focus-visible{ outline:2px solid var(--accent-hi); outline-offset:2px; }
+  .btn-ghost{ color:var(--dim); }
+  .btn-ghost:hover{ background:var(--panel-2); color:var(--text); border-color:var(--border); }
+  .btn-quiet{ color:var(--dim); border-color:var(--border); background:var(--panel); }
+  .btn-quiet:hover{ border-color:var(--border-strong); color:var(--text); }
+  .btn-primary{ background:var(--accent); color:var(--on-accent); font-weight:600; }
+  .btn-primary:hover{ background:var(--accent-hi); }
+  .btn-primary:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .field{ background:var(--panel-2); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-size:13.5px; padding:.55rem .7rem; width:100%; }
+  .field::placeholder{ color:var(--faint); }
+  .field:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+
+  .seg{ display:flex; background:var(--rail); border:1px solid var(--border); border-radius:8px; padding:2px; gap:2px; }
+  .seg button{ display:inline-flex; align-items:center; gap:.35rem; border-radius:6px;
+    padding:.3rem .6rem; font-size:12.5px; font-weight:500; color:var(--dim); }
+  .seg button[aria-pressed="true"]{ background:var(--panel); color:var(--text); box-shadow:var(--shadow); }
+
+  /* Browser frame + canvas */
+  .viewport-grid{
+    background-image:linear-gradient(var(--grid) 1px, transparent 1px),
+                     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  .pin{ position:absolute; transform:translate(-50%,-100%); pointer-events:auto;
+    display:grid; place-items:center; width:26px; height:32px; cursor:pointer; }
+  .pin-body{ width:24px; height:24px; border-radius:50% 50% 50% 2px; transform:rotate(-45deg);
+    display:grid; place-items:center; box-shadow:var(--shadow-lg);
+    border:1.5px solid rgba(255,255,255,.75); transition:transform .16s ease; }
+  .pin-num{ transform:rotate(45deg); font-family:"IBM Plex Mono",monospace; font-size:11px;
+    font-weight:600; line-height:1; }
+  .pin:hover .pin-body{ transform:rotate(-45deg) scale(1.12); }
+  .pin-open .pin-body{ background:var(--accent); color:#fff; }
+  .pin-done .pin-body{ background:var(--ok); color:#06241A; }
+  .pin-sel .pin-body{ transform:rotate(-45deg) scale(1.22); }
+  .pin-sel::after{ content:""; position:absolute; inset:-10px; border-radius:50%;
+    border:2px solid var(--accent-hi); animation:ping 1.5s cubic-bezier(0,0,.2,1) infinite; }
+  @keyframes ping{ 0%{transform:scale(.7);opacity:.9} 80%,100%{transform:scale(1.5);opacity:0} }
+  @keyframes spin{ to{ transform:rotate(360deg) } }
+  .spin{ animation:spin .8s linear infinite; }
+  @keyframes rise{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+  .rise{ animation:rise .22s ease-out both; }
+  @media (prefers-reduced-motion: reduce){
+    .spin,.pin-sel::after,.rise{ animation:none !important; }
+    *{ transition-duration:.01ms !important; }
+  }
+
+  .card-sel{ border-color:var(--accent) !important; box-shadow:0 0 0 3px var(--accent-soft); }
+  .scroll::-webkit-scrollbar{ width:10px; height:10px; }
+  .scroll::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:99px;
+    border:3px solid var(--panel); }
+  .scroll::-webkit-scrollbar-track{ background:transparent; }
+</style>
+
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+/* ────────────────────────────────────────────────────────────── icons */
+const P = {
+  globe:<><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3Z"/></>,
+  pin:<><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></>,
+  cursor:<><path d="M5 3l6.5 16 2.2-6.3L20 10.5 5 3Z"/></>,
+  share:<><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></>,
+  refresh:<><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4.5V10h-5.5"/></>,
+  check:<><path d="M20 6.5 9.5 17 4 11.5"/></>,
+  trash:<><path d="M4 7h16"/><path d="M9.5 7V4.8h5V7"/><path d="M6.2 7l.9 12.2A1.8 1.8 0 0 0 8.9 21h6.2a1.8 1.8 0 0 0 1.8-1.8L17.8 7"/><path d="M10.2 11v6M13.8 11v6"/></>,
+  upload:<><path d="M12 16V4"/><path d="M7.5 8.5 12 4l4.5 4.5"/><path d="M4 16.5V19a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-2.5"/></>,
+  download:<><path d="M12 4v12"/><path d="M7.5 11.5 12 16l4.5-4.5"/><path d="M4 16.5V19a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-2.5"/></>,
+  help:<><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.8-.9 1.4v.4"/><path d="M12 17h.01"/></>,
+  x:<><path d="M6 6l12 12M18 6 6 18"/></>,
+  alert:<><path d="M10.7 4.2 2.9 18a1.5 1.5 0 0 0 1.3 2.2h15.6a1.5 1.5 0 0 0 1.3-2.2L13.3 4.2a1.5 1.5 0 0 0-2.6 0Z"/><path d="M12 9.5v4"/><path d="M12 17.2h.01"/></>,
+  copy:<><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 6.5A2.5 2.5 0 0 0 12.5 4H6a2 2 0 0 0-2 2v6.5A2.5 2.5 0 0 0 6.5 15"/></>,
+  left:<><path d="M14.5 5 8 12l6.5 7"/></>,
+  right:<><path d="M9.5 5 16 12l-6.5 7"/></>,
+  plus:<><path d="M12 5v14M5 12h14"/></>,
+  code:<><path d="M9 7 4 12l5 5"/><path d="m15 7 5 5-5 5"/></>,
+  cloud:<><path d="M7 18a4 4 0 0 1-.4-8A5.5 5.5 0 0 1 17.3 10h.2a4 4 0 0 1 0 8Z"/></>,
+  drive:<><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M3 10h18"/><circle cx="6.8" cy="7.2" r=".6" fill="currentColor"/></>,
+  user:<><circle cx="12" cy="8" r="3.5"/><path d="M4.8 20a7.4 7.4 0 0 1 14.4 0"/></>,
+  eye:<><path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></>,
+  pen:<><path d="M16.8 3.9a2.3 2.3 0 0 1 3.3 3.3L8.4 18.9 4 20l1.1-4.4Z"/><path d="M15.2 5.5l3.3 3.3"/></>,
+  marker:<><path d="M14.4 3.8 20.2 9.6 11.6 18.2H5.8V12.4Z"/><path d="M4 21h16"/></>,
+  arrow:<><path d="M5 19 19 5"/><path d="M11 5h8v8"/></>,
+  box:<><rect x="4" y="5.5" width="16" height="13" rx="1.5"/></>,
+  type:<><path d="M5 6.5V5h14v1.5"/><path d="M12 5v14"/><path d="M9 19h6"/></>,
+  undo:<><path d="M4 9.5h10.5a4.75 4.75 0 0 1 0 9.5H8"/><path d="M7.5 5 3 9.5 7.5 14"/></>,
+};
+function Icon({ n, s = 16, cls = "" }) {
+  return (
+    <svg className={cls} width={s} height={s} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"
+      aria-hidden="true" style={{ flex: "none" }}>{P[n]}</svg>
+  );
+}
+
+/* ────────────────────────────────────────────────────────── utilities */
+const uid = (n = 10) => {
+  const a = "abcdefghjkmnpqrstuvwxyz23456789";
+  let s = ""; const r = new Uint8Array(n);
+  (crypto || window.crypto).getRandomValues(r);
+  for (let i = 0; i < n; i++) s += a[r[i] % a.length];
+  return s;
+};
+const nowISO = () => new Date().toISOString();
+const since = (iso) => {
+  const d = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (d < 45) return "just now";
+  if (d < 3600) return Math.round(d / 60) + "m ago";
+  if (d < 86400) return Math.round(d / 3600) + "h ago";
+  if (d < 604800) return Math.round(d / 86400) + "d ago";
+  return new Date(iso).toLocaleDateString();
+};
+const normUrl = (v) => {
+  const t = (v || "").trim();
+  if (!t) return "";
+  return /^https?:\/\//i.test(t) ? t : "https://" + t;
+};
+const host = (u) => { try { return new URL(u).host; } catch (e) { return u || ""; } };
+const byTime = (a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0);
+
+/* ───────────────────────────────────────────────── the sample target */
+/* A plausible marketing page so the tool opens in a working state.    */
+const DEMO_HTML = [
+'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
+'<style>*{box-sizing:border-box;margin:0;padding:0}body{font:16px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;color:#1c2333;background:#fff}',
+'nav{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;border-bottom:1px solid #eceef4}',
+'nav b{font-size:17px;letter-spacing:-.02em}nav ul{display:flex;gap:26px;list-style:none;font-size:14px;color:#5a6478}',
+'nav .cta{background:#1c2333;color:#fff;padding:9px 16px;border-radius:7px;font-size:14px}',
+'header{padding:78px 48px 64px;text-align:center;background:linear-gradient(#fbfbfe,#fff)}',
+'header h1{font-size:46px;line-height:1.1;letter-spacing:-.03em;max-width:680px;margin:0 auto 18px}',
+'header p{color:#5a6478;max-width:520px;margin:0 auto 28px}',
+'header .row{display:flex;gap:12px;justify-content:center}header .row a{padding:12px 22px;border-radius:8px;font-size:15px;text-decoration:none}',
+'.p{background:#4338ca;color:#fff}.s{border:1px solid #d9dde8;color:#1c2333}',
+'section{padding:56px 48px;border-top:1px solid #eceef4}h2{font-size:24px;letter-spacing:-.02em;margin-bottom:24px}',
+'.g{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}',
+'.c{border:1px solid #eceef4;border-radius:12px;padding:22px}.c h3{font-size:16px;margin-bottom:7px}',
+'.c p{font-size:14px;color:#5a6478}.c .k{font-size:28px;letter-spacing:-.02em;margin-bottom:6px}',
+'table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:11px 8px;border-bottom:1px solid #eceef4}',
+'footer{padding:34px 48px;color:#8a93a8;font-size:13px;border-top:1px solid #eceef4}</style></head><body>',
+'<nav><b>Northwind Freight</b><ul><li>Platform</li><li>Lanes</li><li>Pricing</li><li>Docs</li></ul><span class="cta">Book a demo</span></nav>',
+'<header><h1>Every pallet, every lane, one dashboard.</h1>',
+'<p>Northwind connects your carriers, customs brokers and warehouses so you can quote a shipment in nine seconds instead of nine emails.</p>',
+'<div class="row"><a class="p" href="#">Start free trial</a><a class="s" href="#">Watch the 4-min tour</a></div></header>',
+'<section><h2>Why teams switch</h2><div class="g">',
+'<div class="c"><div class="k">9s</div><h3>Instant quoting</h3><p>Live rates from 240 carriers, ranked by landed cost and transit days.</p></div>',
+'<div class="c"><div class="k">31%</div><h3>Lower detention</h3><p>Dock appointments sync to the driver app the moment a slot frees up.</p></div>',
+'<div class="c"><div class="k">ISO</div><h3>Audit ready</h3><p>Every document version retained for seven years with a signed chain of custody.</p></div>',
+'</div></section>',
+'<section><h2>Plans</h2><table><tr><th>Plan</th><th>Shipments / mo</th><th>Lanes</th><th>Price</th></tr>',
+'<tr><td>Starter</td><td>Up to 250</td><td>5</td><td>&euro;390</td></tr>',
+'<tr><td>Growth</td><td>Up to 2,000</td><td>Unlimited</td><td>&euro;1,450</td></tr>',
+'<tr><td>Enterprise</td><td>Unmetered</td><td>Unlimited</td><td>Talk to us</td></tr></table></section>',
+'<footer>&copy; 2026 Northwind Freight BV &middot; Rotterdam &middot; This is a sample page for review.</footer>',
+'</body></html>'
+].join("");
+
+/* ───────────────────────────────────────────────────── data adapters */
+/* One interface, three engines. The published page uses the Claude    */
+/* backend; a deployed build uses Supabase; localStorage is the net.   */
+
+const LS = {
+  key: (sid) => "redline:" + sid,
+  read(sid) { try { return JSON.parse(localStorage.getItem(LS.key(sid)) || "null"); } catch (e) { return null; } },
+  write(sid, v) { try { localStorage.setItem(LS.key(sid), JSON.stringify(v)); } catch (e) {} },
+};
+
+function LocalBackend() {
+  return {
+    id: "local",
+    label: "This browser",
+    async getSession(sid) { const r = LS.read(sid); return r ? r.session : null; },
+    async putSession(s) { const r = LS.read(s.id) || { comments: [] }; r.session = s; LS.write(s.id, r); return s; },
+    async listComments(sid) { const r = LS.read(sid); return (r && r.comments) || []; },
+    async putComment(sid, c) {
+      const r = LS.read(sid) || { session: null, comments: [] };
+      const i = r.comments.findIndex((x) => x.id === c.id);
+      if (i >= 0) r.comments[i] = c; else r.comments.push(c);
+      LS.write(sid, r); return c;
+    },
+    async delComment(sid, cid) {
+      const r = LS.read(sid) || { comments: [] };
+      r.comments = r.comments.filter((x) => x.id !== cid); LS.write(sid, r);
+    },
+    async listMarks(sid) { const r = LS.read(sid); return (r && r.marks) || []; },
+    async putMark(sid, m) {
+      const r = LS.read(sid) || { session: null, comments: [], marks: [] };
+      r.marks = r.marks || [];
+      const i = r.marks.findIndex((x) => x.id === m.id);
+      if (i >= 0) r.marks[i] = m; else r.marks.push(m);
+      LS.write(sid, r); return m;
+    },
+    async delMark(sid, mid) {
+      const r = LS.read(sid) || { marks: [] };
+      r.marks = (r.marks || []).filter((x) => x.id !== mid); LS.write(sid, r);
+    },
+    subscribe() { return null; },
+    subscribeMarks() { return null; },
+  };
+}
+
+/* Shapes coming back from a document store vary; flatten defensively. */
+function flatten(snap) {
+  const out = [];
+  const docs = Array.isArray(snap) ? snap : (snap && (snap.docs || snap.documents || snap.items)) || [];
+  for (const d of docs) {
+    if (!d) continue;
+    let data = d;
+    if (typeof d.data === "function") data = d.data();
+    else if (d.data && typeof d.data === "object") data = d.data;
+    const id = d.id || data.id;
+    if (data && id) out.push(Object.assign({}, data, { id }));
+  }
+  return out;
+}
+
+function ClaudeBackend(db) {
+  const col = (sid) => db.collection("sessions/" + sid + "/comments");
+  const mcol = (sid) => db.collection("sessions/" + sid + "/marks");
+  return {
+    id: "claude",
+    label: "Shared — live",
+    async getSession(sid) {
+      const d = await db.doc("sessions/" + sid).get();
+      if (!d) return null;
+      const data = typeof d.data === "function" ? d.data() : (d.data || d);
+      return data && data.target_url !== undefined ? Object.assign({ id: sid }, data) : null;
+    },
+    async putSession(s) { await db.doc("sessions/" + s.id).set(s); return s; },
+    async listComments(sid) { return flatten(await col(sid).get()).sort(byTime); },
+    async putComment(sid, c) { await col(sid).doc(c.id).set(c); return c; },
+    async delComment(sid, cid) { await col(sid).doc(cid).delete(); },
+    async listMarks(sid) { return flatten(await mcol(sid).get()).sort(byTime); },
+    async putMark(sid, m) { await mcol(sid).doc(m.id).set(m); return m; },
+    async delMark(sid, mid) { await mcol(sid).doc(mid).delete(); },
+    subscribe(sid, cb) {
+      try { return col(sid).onSnapshot((snap) => cb(flatten(snap).sort(byTime))); }
+      catch (e) { return null; }
+    },
+    subscribeMarks(sid, cb) {
+      try { return mcol(sid).onSnapshot((snap) => cb(flatten(snap).sort(byTime))); }
+      catch (e) { return null; }
+    },
+  };
+}
+
+/* Activated on a deployed build: set window.REDLINE_SUPABASE before React mounts.
+   Talks to PostgREST directly — no extra bundle, same schema as the guide. */
+function SupabaseBackend(cfg) {
+  const base = cfg.url.replace(/\/+$/, "") + "/rest/v1";
+  const H = {
+    apikey: cfg.anonKey,
+    Authorization: "Bearer " + cfg.anonKey,
+    "Content-Type": "application/json",
+    Prefer: "resolution=merge-duplicates,return=representation",
+  };
+  const req = async (path, init) => {
+    const r = await fetch(base + path, Object.assign({ headers: H }, init || {}));
+    if (!r.ok) throw new Error("supabase " + r.status + " " + (await r.text()));
+    return r.status === 204 ? null : r.json();
+  };
+  return {
+    id: "supabase",
+    label: "Supabase — live",
+    async getSession(sid) {
+      const r = await req("/sessions?id=eq." + encodeURIComponent(sid) + "&select=*");
+      return (r && r[0]) || null;
+    },
+    async putSession(s) { await req("/sessions", { method: "POST", body: JSON.stringify(s) }); return s; },
+    async listComments(sid) {
+      const r = await req("/comments?session_id=eq." + encodeURIComponent(sid) + "&select=*&order=created_at.asc");
+      return r || [];
+    },
+    async putComment(sid, c) { await req("/comments", { method: "POST", body: JSON.stringify(c) }); return c; },
+    async delComment(sid, cid) { await req("/comments?id=eq." + encodeURIComponent(cid), { method: "DELETE" }); },
+    async listMarks(sid) {
+      const r = await req("/marks?session_id=eq." + encodeURIComponent(sid) + "&select=*&order=created_at.asc");
+      return r || [];
+    },
+    async putMark(sid, m) { await req("/marks", { method: "POST", body: JSON.stringify(m) }); return m; },
+    async delMark(sid, mid) { await req("/marks?id=eq." + encodeURIComponent(mid), { method: "DELETE" }); },
+    /* Swap these for supabase-js .channel(...).on('postgres_changes', ...) — see the guide. */
+    subscribe() { return null; },
+    subscribeMarks() { return null; },
+  };
+}
+
+async function pickBackend() {
+  if (window.REDLINE_SUPABASE && window.REDLINE_SUPABASE.url) {
+    try { return SupabaseBackend(window.REDLINE_SUPABASE); } catch (e) {}
+  }
+  try {
+    if (window.claude && window.claude.use) {
+      const db = await window.claude.use("db");
+      if (db) return ClaudeBackend(db);
+    }
+  } catch (e) {}
+  return LocalBackend();
+}
+
+/* ─────────────────────────────────────────────────────── small parts */
+function Chip({ tone = "dim", children }) {
+  const map = {
+    dim: { background: "var(--rail)", color: "var(--dim)", borderColor: "var(--border)" },
+    accent: { background: "var(--accent-soft)", color: "var(--accent)", borderColor: "transparent" },
+    ok: { background: "var(--ok-soft)", color: "var(--ok)", borderColor: "transparent" },
+    warn: { background: "var(--warn-soft)", color: "var(--warn)", borderColor: "transparent" },
+  };
+  return (
+    <span className="ff-mono inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5"
+      style={Object.assign({ fontSize: "10.5px", letterSpacing: ".04em" }, map[tone])}>{children}</span>
+  );
+}
+
+function Modal({ children, onClose, wide }) {
+  useEffect(() => {
+    const k = (e) => { if (e.key === "Escape" && onClose) onClose(); };
+    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(8,11,20,.55)", backdropFilter: "blur(2px)" }}>
+      <div className="rise w-full rounded-xl surface" style={{ maxWidth: wide ? 620 : 420, boxShadow: "var(--shadow-lg)" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────────────────────────────────── name gate */
+function NameGate({ onSet }) {
+  const [v, setV] = useState("");
+  const ref = useRef(null);
+  useEffect(() => { if (ref.current) ref.current.focus(); }, []);
+  const go = (e) => { e.preventDefault(); const n = v.trim(); if (n) onSet(n.slice(0, 40)); };
+  return (
+    <Modal>
+      <form onSubmit={go} className="p-6">
+        <div className="flex items-center gap-2 mb-1" style={{ color: "var(--accent)" }}>
+          <Icon n="user" s={15} /><span className="eyebrow" style={{ color: "var(--accent)" }}>Attribution</span>
+        </div>
+        <h2 className="text-lg font-semibold mb-1" style={{ letterSpacing: "-.01em" }}>What should we call you?</h2>
+        <p className="text-sm mb-4" style={{ color: "var(--dim)", lineHeight: 1.55 }}>
+          Your name goes on every pin you drop, so the rest of the review knows who asked for what.
+        </p>
+        <input ref={ref} className="field" value={v} maxLength={40} onChange={(e) => setV(e.target.value)}
+          placeholder="e.g. Sarah Ellis" />
+        <div className="flex justify-end mt-4">
+          <button className="btn btn-primary" disabled={!v.trim()} type="submit">
+            Join the review <Icon n="right" s={14} />
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+/* ───────────────────────────────────────────────────── landing */
+function Landing({ onCreate, onJoin }) {
+  const [url, setUrl] = useState("");
+  const [code, setCode] = useState("");
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 flex items-center justify-center px-5 py-14">
+        <div className="w-full" style={{ maxWidth: 860 }}>
+
+          <div className="flex items-center gap-2.5 mb-8">
+            <span className="grid place-items-center rounded-md" style={{ width: 26, height: 26, background: "var(--accent)", color: "var(--on-accent)" }}>
+              <Icon n="pin" s={15} />
+            </span>
+            <span className="ff-display text-xl" style={{ fontWeight: 700, letterSpacing: "-.01em" }}>Redline</span>
+          </div>
+
+          <h1 className="ff-display mb-4" style={{ fontSize: "clamp(34px,5.4vw,56px)", lineHeight: 1.03, fontWeight: 700, letterSpacing: "-.025em", textWrap: "balance", maxWidth: "15ch" }}>
+            Point at the thing you mean.
+          </h1>
+          <p className="text-base mb-9" style={{ color: "var(--dim)", maxWidth: "58ch", lineHeight: 1.65 }}>
+            Open a page, draw on it, drop numbered pins where the problems are, and send one link
+            to everyone who needs to weigh in. No more &ldquo;the button under the hero, third one along.&rdquo;
+          </p>
+
+          <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(272px,1fr))" }}>
+
+            <div className="surface rounded-xl p-5" style={{ boxShadow: "var(--shadow)" }}>
+              <div className="eyebrow mb-3">01 — Start a review</div>
+              <label className="block text-sm font-medium mb-1.5">Target website URL</label>
+              <input className="field ff-mono" style={{ fontSize: "12.5px" }} value={url}
+                onChange={(e) => setUrl(e.target.value)} placeholder="northwind-freight.com/pricing"
+                onKeyDown={(e) => { if (e.key === "Enter" && url.trim()) onCreate(normUrl(url)); }} />
+              <button className="btn btn-primary w-full justify-center mt-3" disabled={!url.trim()}
+                onClick={() => onCreate(normUrl(url))}>
+                <Icon n="plus" s={14} /> Create feedback project
+              </button>
+              <button className="btn btn-ghost w-full justify-center mt-1.5" onClick={() => onCreate("", DEMO_HTML)}>
+                <Icon n="eye" s={14} /> or mark up the sample page
+              </button>
+              <p className="text-xs mt-2.5" style={{ color: "var(--faint)", lineHeight: 1.5 }}>
+                On this hosted page, live sites can&rsquo;t be framed — you&rsquo;ll be offered
+                a screenshot to mark up instead, which works just as well.
+              </p>
+            </div>
+
+            <div className="surface rounded-xl p-5" style={{ boxShadow: "var(--shadow)" }}>
+              <div className="eyebrow mb-3">02 — Join one</div>
+              <label className="block text-sm font-medium mb-1.5">Session code</label>
+              <input className="field ff-mono" style={{ fontSize: "12.5px" }} value={code}
+                onChange={(e) => setCode(e.target.value)} placeholder="k7m2pq4rhd"
+                onKeyDown={(e) => { if (e.key === "Enter" && code.trim()) onJoin(code.trim()); }} />
+              <button className="btn btn-quiet w-full justify-center mt-3" disabled={!code.trim()}
+                onClick={() => onJoin(code.trim())}>
+                <Icon n="right" s={14} /> Open that review
+              </button>
+              <p className="text-xs mt-3" style={{ color: "var(--faint)", lineHeight: 1.5 }}>
+                A teammate&rsquo;s share link carries the code in <span className="ff-mono">?session=</span>.
+                Paste either one.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-9 text-xs" style={{ color: "var(--faint)" }}>
+            <span className="inline-flex items-center gap-1.5"><Icon n="pen" s={13} /> Pin, draw, highlight, arrow and label</span>
+            <span className="inline-flex items-center gap-1.5"><Icon n="code" s={13} /> Paste raw HTML when a site blocks framing</span>
+            <span className="inline-flex items-center gap-1.5"><Icon n="download" s={13} /> Export the whole review as Markdown</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────── choose what to mark up */
+function SourcePanel({ onUse, onShot, onClose, initial, hosted, busy }) {
+  const [tab, setTab] = useState(hosted ? "shot" : "html");
+  const [txt, setTxt] = useState(initial || "");
+  const htmlFile = useRef(null);
+  const imgFile = useRef(null);
+  const takeHtml = (f) => {
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => setTxt(String(r.result || ""));
+    r.readAsText(f);
+  };
+  const TAB = (k, label) => (
+    <button key={k} aria-pressed={tab === k} onClick={() => setTab(k)} className="flex-1 justify-center">{label}</button>
+  );
+  return (
+    <Modal wide onClose={onClose}>
+      <div className="flex items-start justify-between p-5 pb-3 border-b hairline">
+        <div>
+          <div className="eyebrow mb-1">Source</div>
+          <h2 className="text-base font-semibold">What should we mark up?</h2>
+        </div>
+        <button className="btn btn-ghost" onClick={onClose} aria-label="Close"><Icon n="x" s={16} /></button>
+      </div>
+
+      <div className="px-5 pt-4">
+        <div className="seg">{TAB("shot", "Screenshot")}{TAB("html", "Page HTML")}</div>
+      </div>
+
+      {tab === "shot" ? (
+        <div className="p-5">
+          <p className="text-sm mb-4" style={{ color: "var(--dim)", lineHeight: 1.6, maxWidth: "60ch" }}>
+            The most reliable source, and the only one that always works on this hosted page:
+            a screenshot of the site. Drop in a PNG or JPG, or just press
+            <span className="ff-mono"> &#8984;V </span> with one on your clipboard. Every tool works
+            on it exactly as it does on a live page.
+          </p>
+          <input ref={imgFile} type="file" accept="image/*" className="hidden"
+            onChange={(e) => onShot(e.target.files && e.target.files[0])} />
+          <button className="btn btn-primary" disabled={busy} onClick={() => imgFile.current && imgFile.current.click()}>
+            <Icon n={busy ? "refresh" : "upload"} s={14} cls={busy ? "spin" : ""} />
+            {busy ? "Uploading…" : "Choose an image"}
+          </button>
+          <p className="text-xs mt-4" style={{ color: "var(--faint)", lineHeight: 1.6, maxWidth: "60ch" }}>
+            In Chrome, a full-page capture is <span className="ff-mono">&#8984;&#8679;P</span> in DevTools,
+            then type &ldquo;screenshot&rdquo; and pick <em>Capture full size screenshot</em>.
+          </p>
+        </div>
+      ) : (
+        <div className="p-5">
+          <p className="text-sm mb-3" style={{ color: "var(--dim)", lineHeight: 1.6, maxWidth: "60ch" }}>
+            Paste the page source or drop in an <span className="ff-mono">.html</span> file. It renders
+            locally, so a site that refuses to be framed can still be reviewed — but note that stylesheets
+            and images pulled from other domains are blocked on this hosted page, so only self-contained
+            HTML renders faithfully here.
+          </p>
+          <textarea className="field ff-mono scroll" rows={8} value={txt} spellCheck="false"
+            style={{ fontSize: "11.5px", lineHeight: 1.6, resize: "vertical" }}
+            onChange={(e) => setTxt(e.target.value)}
+            placeholder={'<!doctype html>\n<html>\n  <body> … paste the page source here … </body>\n</html>'} />
+          <input ref={htmlFile} type="file" accept=".html,.htm,text/html" className="hidden"
+            onChange={(e) => takeHtml(e.target.files && e.target.files[0])} />
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <button className="btn btn-quiet" onClick={() => htmlFile.current && htmlFile.current.click()}>
+              <Icon n="upload" s={14} /> Choose a file
+            </button>
+            <button className="btn btn-ghost" onClick={() => setTxt(DEMO_HTML)}>Load the sample page</button>
+            <div className="flex-1" />
+            <button className="btn btn-primary" disabled={!txt.trim()} onClick={() => onUse(txt)}>
+              <Icon n="check" s={14} /> Render it
+            </button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function SharePanel({ onClose, link, code, backend, onCopy }) {
+  const onDisk = window.location.protocol === "file:";
+  const reach = {
+    file: {
+      tone: "warn", head: "Nobody — this copy is running off your hard disk",
+      body: "The address bar says file:/// , so this page is not on the internet at all. The link below points at a folder on your own computer and will do nothing for anyone else. Nothing you mark up here is shared.",
+      note: "Put this file on a host — Netlify Drop or Vercel, five minutes — and the same app gives you a real https:// link that anyone can open and mark up.",
+    },
+    claude: {
+      tone: "ok", head: "People you invite, with edit access",
+      body: "Open this page's own Share menu and invite people by email — guests from outside your company are fine. Anyone given Can edit, signed in to Claude, sees your markups and can add their own. Read-only viewers can see the review but cannot write to it; that is a platform rule, not a setting here.",
+      note: "Need comments from someone who will not sign in to Claude at all? Deploy the Supabase build — its link works for anybody.",
+    },
+    supabase: {
+      tone: "ok", head: "Anyone with the link",
+      body: "This build is connected to your Supabase project, so the link works for anybody — no account, no sign-in. Markups sync between everyone who has it.",
+      note: "The link is the only access control. Treat it as a password.",
+    },
+    local: {
+      tone: "warn", head: "Only this browser",
+      body: "No shared store is reachable right now, so your markups are saved to this device and nobody else will see them. The session code still works if you reopen the page here.",
+      note: "Sign in to Claude, or deploy the Supabase build, to share a review with other people.",
+    },
+  }[onDisk ? "file" : backend.id];
+
+  return (
+    <Modal wide onClose={onClose}>
+      <div className="flex items-start justify-between p-5 pb-3 border-b hairline">
+        <div>
+          <div className="eyebrow mb-1">Share</div>
+          <h2 className="text-base font-semibold">Bring other people into this review</h2>
+        </div>
+        <button className="btn btn-ghost" onClick={onClose} aria-label="Close"><Icon n="x" s={16} /></button>
+      </div>
+
+      <div className="p-5 flex flex-col gap-4">
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--dim)" }}>
+            {onDisk ? "Link — not shareable" : "Link"}
+          </label>
+          <div className="flex gap-2">
+            <input className="field ff-mono" readOnly value={link}
+              style={{ fontSize: "11.5px", color: onDisk ? "var(--faint)" : "var(--text)",
+                textDecoration: onDisk ? "line-through" : "none" }}
+              onFocus={(e) => e.target.select()} />
+            <button className={"btn shrink-0 " + (onDisk ? "btn-quiet" : "btn-primary")}
+              disabled={onDisk} onClick={() => onCopy(link, "Link")}>
+              <Icon n="copy" s={14} /> Copy
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--dim)" }}>
+            Session code — works if the link loses its query string
+          </label>
+          <div className="flex gap-2">
+            <input className="field ff-mono" readOnly value={code} style={{ fontSize: "12.5px", maxWidth: 180 }}
+              onFocus={(e) => e.target.select()} />
+            <button className="btn btn-quiet shrink-0" onClick={() => onCopy(code, "Code")}>
+              <Icon n="copy" s={14} /> Copy
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-lg p-3.5" style={{
+          background: reach.tone === "ok" ? "var(--ok-soft)" : "var(--warn-soft)",
+          border: "1px solid " + (reach.tone === "ok" ? "var(--ok)" : "var(--warn)") + "33",
+        }}>
+          <div className="flex items-center gap-2 mb-1.5"
+            style={{ color: reach.tone === "ok" ? "var(--ok)" : "var(--warn)" }}>
+            <Icon n={reach.tone === "ok" ? "cloud" : "alert"} s={15} />
+            <span className="text-sm font-semibold">Who can comment: {reach.head}</span>
+          </div>
+          <p className="text-sm" style={{ color: "var(--dim)", lineHeight: 1.6 }}>{reach.body}</p>
+          <p className="text-xs mt-2" style={{ color: "var(--faint)", lineHeight: 1.55 }}>{reach.note}</p>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function HelpPanel({ onClose }) {
+  const rows = [
+    ["Every mark", "Pin, stroke, highlight, arrow, box or label — each one opens its own numbered comment in the sidebar, with an author, a note and a Resolved state."],
+    ["Browse", "Clicks pass through to the page. Scroll, dismiss cookie banners, navigate."],
+    ["Pin", "A numbered marker for a comment that is about a point, not a shape."],
+    ["Draw", "Freehand ink. Hold and drag; let go to commit the stroke and open its note."],
+    ["Highlight", "A thick translucent stroke that multiplies over the page, like a marker."],
+    ["Arrow / Box", "Drag from where you start to where you mean. Arrowheads follow the angle."],
+    ["Text", "Click, type, Enter. The label on the page and its comment are the same text — edit either."],
+    ["Numbers", "The badge on the canvas matches the number in the sidebar. Click either to select the pair."],
+    ["Resolve", "Ticking a comment fades its ink and turns its badge green."],
+    ["Undo", "Steps back through your own markups only — it never touches a teammate's."],
+    ["Screenshot", "The dependable source on this hosted page: claude.ai's sandbox will not load other websites inside an artifact, and an image has no such restriction. Drop one in, or press ⌘V with one on the clipboard."],
+    ["Live site", "Works when you run the deployed build on your own domain. On the hosted page it is blocked, and you will be offered the screenshot route instead."],
+    ["Scrolling", "The page is laid out full-height inside a canvas, and that canvas is what scrolls — so a mark stays welded to the content under it rather than floating over the viewport."],
+    ["Canvas height", "A screenshot sets its own. Pasted HTML is measured exactly. A live site cannot be read across origins, so it starts at five screens — type a bigger number until the footer is in view, then zoom out to take it all in."],
+    ["Width", "Renders the site at a set viewport width, so you can review the phone layout. It reloads the frame, because that is the only way a responsive page re-lays-out."],
+    ["Shared geometry", "Height and width belong to the session, not to you — marks are percentages of the canvas, so everyone must be looking at the same one. Zoom is yours alone and changes nothing."],
+    ["Missing images", "A framed page thinks it has one enormous viewport and never scrolls, so lazy-loaded images and scroll-triggered animations may not fire. Press Reload after the page settles."],
+    ["Coordinates", "Stored as a percentage of that full canvas, so marks hold their place at any window width."],
+  ];
+  return (
+    <Modal onClose={onClose} wide>
+      <div className="flex items-start justify-between p-5 pb-2 border-b hairline">
+        <h2 className="text-base font-semibold">How a review works</h2>
+        <button className="btn btn-ghost" onClick={onClose} aria-label="Close"><Icon n="x" s={16} /></button>
+      </div>
+      <dl className="p-5 pt-3">
+        {rows.map(([k, v]) => (
+          <div key={k} className="flex gap-4 py-2.5 border-b hairline last:border-0">
+            <dt className="ff-mono text-xs pt-0.5" style={{ width: 96, flex: "none", color: "var(--accent)" }}>{k}</dt>
+            <dd className="text-sm" style={{ color: "var(--dim)", lineHeight: 1.55 }}>{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </Modal>
+  );
+}
+
+/* ───────────────────────────────────────────────────── comment card */
+function CommentCard({ c, n, selected, onSelect, onPatch, onDelete, autoFocus }) {
+  const [draft, setDraft] = useState(c.text || "");
+  const [flash, setFlash] = useState(false);
+  const ta = useRef(null);
+  const dirty = draft !== (c.text || "");
+
+  /* Accept remote edits, but never yank the text out from under a typist. */
+  useEffect(() => {
+    if (ta.current && document.activeElement === ta.current) return;
+    setDraft(c.text || "");
+  }, [c.id, c.text]);
+
+  useEffect(() => { if (autoFocus && ta.current) ta.current.focus(); }, [autoFocus]);
+
+  const save = useCallback(() => {
+    if (draft === (c.text || "")) return;
+    onPatch({ text: draft });
+    setFlash(true);
+    setTimeout(() => setFlash(false), 1500);
+  }, [draft, c.text, onPatch]);
+
+  /* Autosave a second after the last keystroke, so nothing is ever lost. */
+  useEffect(() => {
+    if (!dirty) return;
+    const t = setTimeout(save, 1000);
+    return () => clearTimeout(t);
+  }, [draft, dirty, save]);
+
+  return (
+    <div onClick={onSelect}
+      className={"surface rounded-lg p-3 cursor-pointer transition " + (selected ? "card-sel" : "")}
+      style={{ opacity: c.is_resolved && !selected ? 0.6 : 1 }}>
+      <div className="flex items-center gap-2 mb-2 min-w-0">
+        <span className="grid place-items-center rounded-md ff-mono tnum" style={{
+          width: 20, height: 20, fontSize: 11, fontWeight: 600, flex: "none",
+          background: c.is_resolved ? "var(--ok)" : (c.color || "var(--accent)"),
+          color: "#fff",
+        }}>{n}</span>
+        <span title={KINDS[kindOf(c)].label} style={{ color: "var(--faint)", flex: "none" }}>
+          <Icon n={KINDS[kindOf(c)].i} s={13} />
+        </span>
+        <span className="text-xs font-semibold truncate">{c.author || "Someone"}</span>
+        <span className="text-xs whitespace-nowrap" style={{ color: "var(--faint)" }}>{since(c.created_at)}</span>
+        <div className="flex-1" />
+        <button className="btn btn-ghost px-1.5 py-1" title="Delete pin" style={{ flex: "none" }}
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+          <Icon n="trash" s={13} />
+        </button>
+      </div>
+
+      <textarea ref={ta} className="field" rows={3} value={draft}
+        style={{ fontSize: "13px", lineHeight: 1.5, resize: "vertical" }}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); save(); ta.current.blur(); }
+        }}
+        placeholder={kindOf(c) === "text" ? "Label text — shown on the page" : "What needs to change here?"} />
+
+      <div className="flex items-center gap-2 mt-2 flex-wrap">
+        <button className={"btn " + (dirty ? "btn-primary" : "btn-quiet")} disabled={!dirty}
+          onClick={(e) => { e.stopPropagation(); save(); }}>
+          <Icon n="check" s={13} /> {dirty ? "Save comment" : flash ? "Saved" : "Saved"}
+        </button>
+        {dirty && (
+          <span className="ff-mono hidden xl:inline" style={{ fontSize: 10, color: "var(--faint)" }}>
+            &#8984;&#9166;
+          </span>
+        )}
+        <div className="flex-1" />
+        <label className="flex items-center gap-1.5 text-xs cursor-pointer select-none whitespace-nowrap"
+          style={{ color: c.is_resolved ? "var(--ok)" : "var(--dim)" }}
+          onClick={(e) => e.stopPropagation()}>
+          <input type="checkbox" checked={!!c.is_resolved}
+            style={{ accentColor: "var(--ok)" }}
+            onChange={(e) => onPatch({ is_resolved: e.target.checked })} />
+          Resolved
+        </label>
+      </div>
+
+      <div className="ff-mono tnum mt-1.5" style={{ color: "var(--faint)", fontSize: 10.5 }}>
+        {KINDS[kindOf(c)].label.toLowerCase()} · {anchorOf(c).x.toFixed(1)}% &times; {anchorOf(c).y.toFixed(1)}%
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────── markup: tools + ink */
+const TOOLS = [
+  { k: "browse",    i: "cursor", label: "Browse",    hint: "Clicks reach the page underneath" },
+  { k: "pin",       i: "pin",    label: "Pin",       hint: "Drop a numbered comment" },
+  { k: "pen",       i: "pen",    label: "Draw",      hint: "Freehand line" },
+  { k: "highlight", i: "marker", label: "Highlight", hint: "Thick translucent stroke" },
+  { k: "arrow",     i: "arrow",  label: "Arrow",     hint: "Point at one thing" },
+  { k: "box",       i: "box",    label: "Box",       hint: "Outline a region" },
+  { k: "text",      i: "type",   label: "Text",      hint: "Type a label on the page" },
+];
+const INK = [
+  { k: "red",    v: "#E5484D", name: "Red" },
+  { k: "amber",  v: "#F0A020", name: "Amber" },
+  { k: "green",  v: "#2E9E68", name: "Green" },
+  { k: "indigo", v: "#5B5BD6", name: "Indigo" },
+];
+const STROKE = { pen: 3, highlight: 20, arrow: 3, box: 2.5 };
+const KINDS = {
+  pin:       { i: "pin",    label: "Pin" },
+  pen:       { i: "pen",    label: "Drawing" },
+  highlight: { i: "marker", label: "Highlight" },
+  arrow:     { i: "arrow",  label: "Arrow" },
+  box:       { i: "box",    label: "Box" },
+  text:      { i: "type",   label: "Label" },
+};
+const kindOf = (c) => (c && c.kind && KINDS[c.kind] ? c.kind : "pin");
+const ptsOf  = (c) => (c.points && c.points.length ? c.points : [{ x: c.x_coord, y: c.y_coord }]);
+/* Where the numbered badge sits for each kind of markup. */
+const anchorOf = (c) => {
+  const p = ptsOf(c), k = kindOf(c);
+  if (k === "box") {
+    const a = p[0], b = p[p.length - 1];
+    return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y) };
+  }
+  return p[0];
+};
+
+/* Markups are stored in percentages; drawn in real pixels so nothing skews. */
+function Ink({ items, w, h, sel }) {
+  if (!w || !h) return null;
+  const X = (v) => (v / 100) * w, Y = (v) => (v / 100) * h;
+  const path = (pts) => pts.map((p, i) => (i ? "L" : "M") + X(p.x).toFixed(1) + " " + Y(p.y).toFixed(1)).join(" ");
+  const shapes = items.filter((m) => { const k = kindOf(m); return k !== "pin" && k !== "text"; });
+  return (
+    <svg width={w} height={h} className="absolute inset-0" style={{ pointerEvents: "none" }} aria-hidden="true">
+      <g style={{ mixBlendMode: "multiply" }}>
+        {shapes.filter((m) => kindOf(m) === "highlight").map((m) => (
+          <path key={m.id} d={path(ptsOf(m))} stroke={m.color || INK[0].v}
+            strokeWidth={(m.width || STROKE.highlight) + (sel === m.id ? 6 : 0)}
+            strokeOpacity={m.is_resolved ? ".12" : ".3"} fill="none"
+            strokeLinecap="round" strokeLinejoin="round" />
+        ))}
+      </g>
+      {shapes.filter((m) => kindOf(m) !== "highlight").map((m) => {
+        const k = kindOf(m), p = ptsOf(m);
+        const common = {
+          stroke: m.color || INK[0].v,
+          strokeWidth: (m.width || 3) + (sel === m.id ? 2 : 0),
+          strokeOpacity: m.is_resolved ? 0.3 : 1,
+          fill: "none", strokeLinecap: "round", strokeLinejoin: "round",
+        };
+        if (k === "pen") return <path key={m.id} d={path(p)} {...common} />;
+        const a = p[0], b = p[p.length - 1];
+        if (k === "box") {
+          const x = Math.min(X(a.x), X(b.x)), y = Math.min(Y(a.y), Y(b.y));
+          return <rect key={m.id} x={x} y={y} width={Math.abs(X(b.x) - X(a.x))}
+            height={Math.abs(Y(b.y) - Y(a.y))} rx="3" {...common} />;
+        }
+        const x1 = X(a.x), y1 = Y(a.y), x2 = X(b.x), y2 = Y(b.y);
+        const ang = Math.atan2(y2 - y1, x2 - x1), hd = 13;
+        const hx1 = x2 - hd * Math.cos(ang - 0.42), hy1 = y2 - hd * Math.sin(ang - 0.42);
+        const hx2 = x2 - hd * Math.cos(ang + 0.42), hy2 = y2 - hd * Math.sin(ang + 0.42);
+        return (
+          <g key={m.id} {...common}>
+            <path d={"M" + x1 + " " + y1 + " L" + x2 + " " + y2} />
+            <path d={"M" + hx1 + " " + hy1 + " L" + x2 + " " + y2 + " L" + hx2 + " " + hy2} />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+/* Text labels render their comment body, so editing the note edits the label. */
+function Labels({ items, live, onSelect, sel }) {
+  return items.filter((m) => kindOf(m) === "text").map((m) => {
+    const p = anchorOf(m);
+    return (
+      <div key={m.id} className="absolute" onClick={(e) => { e.stopPropagation(); onSelect(m.id); }}
+        style={{ left: p.x + "%", top: p.y + "%", maxWidth: "34%",
+          pointerEvents: live ? "auto" : "none", cursor: "pointer",
+          opacity: m.is_resolved ? 0.45 : 1 }}>
+        <span className="rounded px-1.5 py-0.5 text-sm font-semibold whitespace-pre-wrap inline-block"
+          style={{
+            background: m.color || INK[0].v, color: "#fff", lineHeight: 1.35,
+            boxShadow: sel === m.id ? "0 0 0 2px var(--panel), 0 0 0 4px " + (m.color || INK[0].v)
+              : "0 1px 6px rgba(0,0,0,.25)",
+          }}>
+          {m.text || "…"}
+        </span>
+      </div>
+    );
+  });
+}
+
+/* One numbered badge per markup, so the canvas and the sidebar agree. */
+function Badges({ items, sel, onSelect }) {
+  return items.map((m, i) => {
+    const k = kindOf(m), p = anchorOf(m);
+    const tone = m.is_resolved ? "var(--ok)" : (m.color || "var(--accent)");
+    if (k === "pin") {
+      return (
+        <button key={m.id} title={(m.author || "Someone") + ": " + (m.text || "no note yet")}
+          className={"pin " + (m.is_resolved ? "pin-done" : "pin-open") + (sel === m.id ? " pin-sel" : "")}
+          style={{ left: p.x + "%", top: p.y + "%" }}
+          onClick={(e) => { e.stopPropagation(); onSelect(m.id); }}>
+          <span className="pin-body" style={{ background: tone }}>
+            <span className="pin-num tnum">{i + 1}</span>
+          </span>
+        </button>
+      );
+    }
+    return (
+      <button key={m.id} title={KINDS[k].label + " — " + (m.author || "Someone") + ": " + (m.text || "no note yet")}
+        className="absolute grid place-items-center rounded-full ff-mono tnum"
+        style={{
+          left: p.x + "%", top: p.y + "%", width: 18, height: 18, fontSize: 10, fontWeight: 600,
+          transform: "translate(-50%,-50%)", pointerEvents: "auto", cursor: "pointer",
+          background: tone, color: "#fff", border: "1.5px solid rgba(255,255,255,.8)",
+          boxShadow: sel === m.id ? "0 0 0 3px " + tone + "55" : "0 1px 4px rgba(0,0,0,.35)",
+          opacity: m.is_resolved ? 0.6 : 1,
+        }}
+        onClick={(e) => { e.stopPropagation(); onSelect(m.id); }}>
+        {i + 1}
+      </button>
+    );
+  });
+}
+
+function Palette({ tool, setTool, color, setColor, onUndo, onClear, marks }) {
+  return (
+    <div className="absolute left-3 top-3 z-40 rounded-xl surface p-1.5 flex flex-col gap-1"
+      style={{ boxShadow: "var(--shadow-lg)" }}>
+      {TOOLS.map((t, i) => (
+        <React.Fragment key={t.k}>
+          {i === 2 && <span style={{ height: 1, background: "var(--border)", margin: "2px 4px" }} />}
+          <button onClick={() => setTool(t.k)} title={t.label + " — " + t.hint}
+            aria-pressed={tool === t.k}
+            className="grid place-items-center rounded-lg transition"
+            style={{ width: 34, height: 34,
+              background: tool === t.k ? "var(--accent)" : "transparent",
+              color: tool === t.k ? "var(--on-accent)" : "var(--dim)" }}>
+            <Icon n={t.i} s={17} />
+          </button>
+        </React.Fragment>
+      ))}
+
+      <span style={{ height: 1, background: "var(--border)", margin: "2px 4px" }} />
+
+      <div className="grid grid-cols-2 gap-1 px-0.5 py-0.5">
+        {INK.map((c) => (
+          <button key={c.k} onClick={() => setColor(c.v)} title={c.name}
+            aria-pressed={color === c.v}
+            className="rounded-full transition"
+            style={{ width: 14, height: 14, background: c.v, margin: "2px",
+              outline: color === c.v ? "2px solid var(--text)" : "none", outlineOffset: 2 }} />
+        ))}
+      </div>
+
+      <span style={{ height: 1, background: "var(--border)", margin: "2px 4px" }} />
+
+      <button onClick={onUndo} disabled={!marks} title="Undo your last mark"
+        className="grid place-items-center rounded-lg" style={{ width: 34, height: 34, color: "var(--dim)", opacity: marks ? 1 : .35 }}>
+        <Icon n="undo" s={17} />
+      </button>
+      <button onClick={onClear} disabled={!marks} title="Erase every mark you drew"
+        className="grid place-items-center rounded-lg" style={{ width: 34, height: 34, color: "var(--danger)", opacity: marks ? 1 : .35 }}>
+        <Icon n="trash" s={16} />
+      </button>
+    </div>
+  );
+}
+
+/* ───────────────────────────────────────────────────── workspace */
+function Workspace({ session, me, backend, onLeave }) {
+  const [comments, setComments] = useState([]);
+  const [tool, setTool] = useState("pin");          // see TOOLS
+  const [color, setColor] = useState(INK[0].v);
+  const [wip, setWip] = useState(null);             // mark being drawn right now
+  const [typing, setTyping] = useState(null);       // {x,y} while a label is being written
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const [filter, setFilter] = useState("open");     // open | resolved | all
+  const [sel, setSel] = useState(null);
+  const [fresh, setFresh] = useState(null);   // the pin just dropped — focus its note
+  const [syncing, setSyncing] = useState(false);
+  const [frameState, setFrameState] = useState(session.html ? "ok" : "loading");
+  const [showSource, setShowSource] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [rail, setRail] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [html, setHtml] = useState(session.html || "");
+  /* Canvas height and device width are shared, not personal: marks are stored
+     as a percentage of the canvas, so a teammate with a different canvas would
+     see every mark land on the wrong element. Zoom is local — it changes
+     nothing about the coordinate space. */
+  const [docH, setDocH] = useState(session.canvas_h || null);
+  const [deviceW, setDeviceW] = useState(session.device_w || null);
+  const [shot, setShot] = useState(session.shot_url ? { url: session.shot_url } : null);
+  const [uploading, setUploading] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [frameKey, setFrameKey] = useState(0);
+  const surfaceRef = useRef(null);
+  const scrollRef = useRef(null);
+  const iframeRef = useRef(null);
+  const sizedOnce = useRef(false);
+
+  const say = (m) => { setToast(m); setTimeout(() => setToast(null), 2200); };
+
+  /* Remember the last markup tool so the Browse toggle returns to it. */
+  const last = useRef("pin");
+  useEffect(() => { if (tool !== "browse") last.current = tool; }, [tool]);
+
+  const refresh = useCallback(async () => {
+    setSyncing(true);
+    try {
+      let cs = (await backend.listComments(session.id)).slice();
+      /* Marks used to live in their own collection. Fold any stragglers in. */
+      try {
+        const legacy = await backend.listMarks(session.id);
+        for (const m of legacy || []) {
+          const c = Object.assign({}, m, {
+            pin_number: 0, x_coord: m.points[0].x, y_coord: m.points[0].y,
+            is_resolved: false,
+          });
+          cs.push(c);
+          await backend.putComment(session.id, c);
+          await backend.delMark(session.id, m.id);
+        }
+      } catch (e) {}
+      setComments(cs.sort(byTime));
+    } catch (e) { say("Could not reach the review store — working locally."); }
+    setSyncing(false);
+  }, [backend, session.id]);
+
+  useEffect(() => {
+    refresh();
+    const un = backend.subscribe && backend.subscribe(session.id, (rows) => setComments(rows));
+    return () => { if (typeof un === "function") un(); };
+  }, [backend, session.id, refresh]);
+
+  /* Marks are drawn in pixels, so the ink layer tracks the frame's real size. */
+  useEffect(() => {
+    const el = surfaceRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      /* offsetWidth/Height, not the bounding rect: the SVG is a child of this
+         element, so it must be sized in the element's own (unzoomed) pixels. */
+      setSize({ w: el.offsetWidth, h: el.offsetHeight });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /* iframe watchdog: a blocked frame never fires load */
+  useEffect(() => {
+    if (html) { setFrameState("ok"); return; }
+    setFrameState("loading");
+    const t = setTimeout(() => setFrameState((s) => (s === "loading" ? "blocked" : s)), 4500);
+    return () => clearTimeout(t);
+  }, [session.target_url, html]);
+
+  /* The whole page is laid out at once inside a tall canvas, and the canvas is
+     what scrolls — that is what keeps a mark welded to the content under it.
+     Same-origin HTML can be measured exactly; a cross-origin site cannot be
+     read at all, so it gets a generous default the reviewer can adjust. */
+  const measure = useCallback(() => {
+    try {
+      const d = iframeRef.current && iframeRef.current.contentDocument;
+      if (d) {
+        /* Readable means same-origin: either our own pasted HTML, or an empty
+           frame left behind because the host refused to load the site. */
+        const empty = !d.body || d.body.childElementCount === 0;
+        if (!html && empty) { setFrameState("blocked"); return; }
+        const hh = Math.max(
+          d.documentElement ? d.documentElement.scrollHeight : 0,
+          d.body ? d.body.scrollHeight : 0);
+        setFrameState("ok");
+        if (hh > 80) { sizedOnce.current = true; setDocH(hh); }
+        return;
+      }
+    } catch (e) { /* cross-origin — which means it genuinely loaded */ }
+    setFrameState("ok");
+  }, [html]);
+
+  /* Reset the measurement only when the source actually changes — not on the
+     first run, which would discard the height the session arrived with. */
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) { firstRun.current = false; return; }
+    sizedOnce.current = false; setDocH(null);
+  }, [html, session.target_url]);
+
+  /* Push canvas geometry back to the session so everyone shares it. */
+  const geomTimer = useRef(null);
+  useEffect(() => {
+    if (firstRun.current) return;
+    clearTimeout(geomTimer.current);
+    geomTimer.current = setTimeout(() => {
+      const next = Object.assign({}, session, {
+        canvas_h: docH || null, device_w: deviceW || null,
+      });
+      if (shot) next.shot_url = shot.url;
+      Promise.resolve(backend.putSession(next)).catch(() => {});
+    }, 900);
+    return () => clearTimeout(geomTimer.current);
+  }, [docH, deviceW]);
+
+  /* A marketing page is typically four to six screens tall, so start there
+     rather than at two — the old default cut most sites off near the top. */
+  useEffect(() => {
+    if (sizedOnce.current || html || shot || !size.h || session.canvas_h) return;
+    sizedOnce.current = true;
+    setDocH(Math.round(size.h * 5));
+  }, [size.h, html, shot, session.canvas_h]);
+
+  const reloadFrame = () => { setFrameState("loading"); setFrameKey((k) => k + 1); };
+
+  /* A screenshot is served from this page's own origin, so nothing blocks it —
+     which is why it is the dependable source on the hosted build. */
+  const useShot = useCallback(async (file) => {
+    if (!file || !/^image\//.test(file.type)) return;
+    setUploading(true);
+    let url = null;
+    try {
+      const assets = window.claude && window.claude.use ? await window.claude.use("assets") : null;
+      if (assets) { const r = await assets.upload(file); url = r && r.url; }
+    } catch (e) { /* fall through to a local copy */ }
+    if (!url) {
+      if (file.size > 3.5 * 1024 * 1024) {
+        setUploading(false);
+        say("That image is too large to keep without shared storage. Try one under 3.5 MB.");
+        return;
+      }
+      url = await new Promise((res) => {
+        const r = new FileReader(); r.onload = () => res(String(r.result)); r.readAsDataURL(file);
+      });
+    }
+    setShot({ url });
+    setHtml("");
+    setShowSource(false);
+    setFrameState("ok");
+    setUploading(false);
+    try { await backend.putSession(Object.assign({}, session, { shot_url: url })); }
+    catch (e) { say("Screenshot kept locally only."); }
+  }, [backend, session]);
+
+  /* Paste a screenshot straight onto the canvas. */
+  useEffect(() => {
+    const onPaste = (e) => {
+      const items = (e.clipboardData && e.clipboardData.items) || [];
+      for (const it of items) {
+        if (it.kind === "file" && /^image\//.test(it.type)) { useShot(it.getAsFile()); return; }
+      }
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [useShot]);
+
+  const ordered = useMemo(() => comments.slice().sort(byTime), [comments]);
+  const numberOf = useCallback((id) => ordered.findIndex((c) => c.id === id) + 1, [ordered]);
+  const openCount = ordered.filter((c) => !c.is_resolved).length;
+  const doneCount = ordered.length - openCount;
+
+  /* The selected pin always stays on screen, even if the filter excludes it —
+     otherwise ticking Resolved makes the card you are working on vanish. */
+  const visible = ordered.filter((c) => c.id === sel ||
+    (filter === "all" ? true : filter === "open" ? !c.is_resolved : !!c.is_resolved));
+
+  const at = (e) => {
+    const r = surfaceRef.current.getBoundingClientRect();
+    const cl = (v) => Math.max(0, Math.min(100, v));
+    return { x: cl(((e.clientX - r.left) / r.width) * 100), y: cl(((e.clientY - r.top) / r.height) * 100) };
+  };
+
+  /* Every markup — pin, stroke, arrow, box or label — is one comment record. */
+  const addMarkup = async (kind, points, text) => {
+    const a = points[0];
+    const c = {
+      id: uid(12), session_id: session.id,
+      kind, points, color, width: STROKE[kind] || 0,
+      pin_number: ordered.length + 1,
+      x_coord: a.x, y_coord: a.y,
+      author: me, text: text || "", is_resolved: false, created_at: nowISO(),
+    };
+    setComments((prev) => prev.concat([c]));
+    setSel(c.id); setFresh(c.id);
+    if (filter === "resolved") setFilter("open");
+    try { await backend.putComment(session.id, c); } catch (err) { say("Saved locally only."); }
+    return c;
+  };
+
+  const down = (e) => {
+    if (tool === "browse") return;
+    const p = at(e);
+    if (tool === "pin") { addMarkup("pin", [p]); return; }
+    if (tool === "text") { setTyping(p); return; }
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setWip({
+      id: "wip", kind: tool, color, width: STROKE[tool],
+      points: [p, p], text: "", is_resolved: false,
+    });
+  };
+
+  const move = (e) => {
+    if (!wip) return;
+    const p = at(e);
+    setWip((d) => {
+      if (!d) return d;
+      if (d.kind === "pen" || d.kind === "highlight") {
+        const last = d.points[d.points.length - 1];
+        if (Math.abs(last.x - p.x) + Math.abs(last.y - p.y) < 0.25) return d;
+        return Object.assign({}, d, { points: d.points.concat([p]) });
+      }
+      return Object.assign({}, d, { points: [d.points[0], p] });
+    });
+  };
+
+  const up = () => {
+    if (!wip) return;
+    const d = wip; setWip(null);
+    const a = d.points[0], b = d.points[d.points.length - 1];
+    const moved = Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    if (d.points.length < 3 && moved < 0.8) return;   // a stray click, not a mark
+    addMarkup(d.kind, d.points);
+  };
+
+  const commitText = async (txt, p) => {
+    setTyping(null);
+    const t = (txt || "").trim();
+    if (t) addMarkup("text", [p], t.slice(0, 280));
+  };
+
+  const mine = ordered.filter((c) => c.author === me);
+  const undoMark = async () => {
+    const last = mine[mine.length - 1];
+    if (!last) return;
+    remove(last.id);
+  };
+  const clearMarks = async () => {
+    if (!mine.length) return;
+    if (!window.confirm("Delete all " + mine.length + " of your markups and their comments?")) return;
+    const ids = mine.map((m) => m.id);
+    setComments((p) => p.filter((c) => ids.indexOf(c.id) < 0));
+    setSel(null);
+    for (const id of ids) { try { await backend.delComment(session.id, id); } catch (e) {} }
+  };
+
+  const patch = async (id, fields) => {
+    let next = null;
+    setComments((p) => p.map((c) => (c.id === id ? (next = Object.assign({}, c, fields)) : c)));
+    if (next) { try { await backend.putComment(session.id, next); } catch (e) { say("Saved locally only."); } }
+  };
+  const remove = async (id) => {
+    setComments((p) => p.filter((c) => c.id !== id));
+    if (sel === id) setSel(null);
+    try { await backend.delComment(session.id, id); } catch (e) {}
+  };
+
+  const shareLink = () => {
+    const u = new URL(window.location.href);
+    u.searchParams.set("session", session.id);
+    return u.toString();
+  };
+  const copy = async (text, label) => {
+    try { await navigator.clipboard.writeText(text); say(label + " copied"); }
+    catch (e) { say("Copy failed — the code is " + session.id); }
+  };
+
+  const exportMd = async () => {
+    const target = session.target_url || "Pasted HTML";
+    const L = [
+      "# Review — " + target, "",
+      "- Session: `" + session.id + "`",
+      "- Exported: " + new Date().toLocaleString(),
+      "- Markups: " + ordered.length + " (" + openCount + " open, " + doneCount + " resolved)",
+      "",
+    ];
+    const tally = Object.keys(KINDS)
+      .map((k) => [KINDS[k].label, ordered.filter((c) => kindOf(c) === k).length])
+      .filter((r) => r[1]);
+    if (tally.length) {
+      L.push("| Type | Count |", "| --- | ---: |");
+      tally.forEach((r) => L.push("| " + r[0] + " | " + r[1] + " |"));
+      L.push("");
+    }
+    ["open", "resolved"].forEach((grp) => {
+      const rows = ordered.filter((c) => (grp === "open" ? !c.is_resolved : !!c.is_resolved));
+      if (!rows.length) return;
+      L.push("## " + (grp === "open" ? "Open" : "Resolved") + " (" + rows.length + ")", "");
+      rows.forEach((c) => {
+        const a = anchorOf(c);
+        L.push("### " + numberOf(c.id) + ". " + KINDS[kindOf(c)].label);
+        L.push("`" + a.x.toFixed(1) + "% x " + a.y.toFixed(1) + "%` — " +
+          (c.author || "Someone") + " · " + new Date(c.created_at).toLocaleString());
+        L.push("");
+        L.push(c.text ? c.text.split("\n").map((l) => "> " + l).join("\n") : "> _(no note written)_");
+        L.push("");
+      });
+    });
+    const data = L.join("\n");
+    const filename = "redline-" + session.id + ".md";
+    try {
+      const d = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
+      if (d) { await d.save({ filename, data }); say("Summary saved"); return; }
+    } catch (e) { say("Download declined"); return; }
+    try {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([data], { type: "text/markdown" }));
+      a.download = filename; a.click(); say("Summary saved");
+    } catch (e) { copy(data, "Summary"); }
+  };
+
+  const frameSrc = html ? null : session.target_url;
+
+  return (
+    <div className="h-screen w-full flex flex-col overflow-hidden" style={{ background: "var(--rail)" }}>
+
+      {/* top bar */}
+      <header className="flex items-center gap-3 px-3 py-2 border-b hairline min-w-0" style={{ background: "var(--panel)" }}>
+        <button className="btn btn-ghost px-1.5 shrink-0" onClick={onLeave} title="Back to start">
+          <span className="grid place-items-center rounded-md" style={{ width: 22, height: 22, background: "var(--accent)", color: "var(--on-accent)" }}>
+            <Icon n="pin" s={13} />
+          </span>
+        </button>
+
+        <div className="hidden sm:flex items-center gap-2 min-w-0">
+          <Icon n={shot ? "eye" : html ? "code" : "globe"} s={14} cls="opacity-50" />
+          <span className="ff-mono text-xs truncate" style={{ maxWidth: 260, color: "var(--dim)" }}>
+            {shot ? "screenshot" : html ? "local HTML" : host(session.target_url)}
+          </span>
+        </div>
+
+        <div className="flex-1 min-w-0" />
+
+        <div className="seg shrink-0" role="group" aria-label="Overlay">
+          <button aria-pressed={tool === "browse"} onClick={() => setTool("browse")}>
+            <Icon n="cursor" s={13} /> Browse
+          </button>
+          <button aria-pressed={tool !== "browse"} onClick={() => setTool(last.current)}>
+            <Icon n="pen" s={13} /> Mark up
+          </button>
+        </div>
+
+        <button className="btn btn-quiet shrink-0" onClick={refresh} title="Fetch the latest pins">
+          <Icon n="refresh" s={14} cls={syncing ? "spin" : ""} />
+          <span className="hidden md:inline">{syncing ? "Syncing" : "Sync"}</span>
+        </button>
+        <button className="btn btn-quiet shrink-0" onClick={() => setShowShare(true)}>
+          <Icon n="share" s={14} /><span className="hidden md:inline">Share</span>
+        </button>
+        <button className="btn btn-ghost px-1.5 shrink-0" onClick={() => setShowHelp(true)} title="How this works">
+          <Icon n="help" s={16} />
+        </button>
+      </header>
+
+      {/* status strip */}
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b hairline flex-wrap"
+        style={{ background: "var(--panel-2)" }}>
+        <Chip tone="accent">{session.id}</Chip>
+        <button className="btn btn-ghost px-1 py-0.5" title="Copy session code"
+          onClick={() => copy(session.id, "Code")}><Icon n="copy" s={12} /></button>
+        <span style={{ color: "var(--border-strong)" }}>|</span>
+        {window.location.protocol === "file:" ? (
+          <button onClick={() => setShowShare(true)} title="This copy is not on the internet — click for what to do">
+            <Chip tone="warn"><Icon n="drive" s={11} /> running from disk — not shareable</Chip>
+          </button>
+        ) : (
+          <Chip tone={backend.id === "local" ? "warn" : "ok"}>
+            <Icon n={backend.id === "local" ? "drive" : "cloud"} s={11} /> {backend.label}
+          </Chip>
+        )}
+        <span style={{ color: "var(--border-strong)" }}>|</span>
+        <span className="ff-mono tnum" style={{ fontSize: 10.5, color: "var(--dim)" }}>
+          {openCount} open · {doneCount} resolved
+        </span>
+        <div className="flex-1 min-w-0" />
+        <span className="ff-mono hidden lg:inline truncate" style={{ fontSize: 10.5, color: "var(--faint)" }}>
+          {tool === "browse" ? "overlay off — the page is live"
+            : tool === "pin" ? "click the page to drop a pin"
+            : tool === "text" ? "click where the label should sit"
+            : "drag on the page to draw"}
+        </span>
+      </div>
+
+      {/* body */}
+      <div className="flex-1 flex min-h-0">
+
+        {/* canvas */}
+        <main className="flex-1 min-w-0 p-3 flex flex-col">
+          <div className="flex-1 min-h-0 rounded-xl overflow-hidden surface flex flex-col"
+            style={{ boxShadow: "var(--shadow)" }}>
+
+            {/* browser chrome */}
+            <div className="flex items-center gap-2 px-3 py-2 border-b hairline" style={{ background: "var(--panel-2)" }}>
+              <span className="flex gap-1.5">
+                {["#F0675A", "#F5BD4F", "#60C454"].map((c) => (
+                  <i key={c} style={{ width: 9, height: 9, borderRadius: 99, background: c, display: "block", opacity: .85 }} />
+                ))}
+              </span>
+              <div className="flex-1 flex items-center gap-1.5 rounded-md px-2 py-1 ff-mono truncate"
+                style={{ background: "var(--rail)", fontSize: 11, color: "var(--dim)" }}>
+                <Icon n={shot ? "eye" : html ? "code" : "globe"} s={11} />
+                <span className="truncate">{shot ? (session.target_url || "screenshot") + " — screenshot" : html ? "about:local-html" : (session.target_url || "—")}</span>
+              </div>
+              {!shot && (
+                <label className="flex items-center gap-1 shrink-0"
+                  title="How tall the page is laid out. A cross-origin site cannot be measured, so set this until the footer is in view — then zoom out to see it all.">
+                  <span className="ff-mono hidden lg:inline" style={{ fontSize: 10, color: "var(--faint)" }}>tall</span>
+                  <input type="number" className="field ff-mono tnum" min={200} step={1000}
+                    style={{ width: 70, fontSize: 10.5, padding: "2px 5px" }}
+                    value={docH || ""} placeholder="fit"
+                    onChange={(e) => setDocH(e.target.value ? Math.max(200, +e.target.value) : null)} />
+                </label>
+              )}
+              {!shot && (
+                <label className="flex items-center gap-1 shrink-0"
+                  title="Width the site is rendered at. Changing it reloads the page into that viewport, so you can review the mobile layout. Shared with everyone in the session.">
+                  <select className="field ff-mono tnum" value={deviceW || ""}
+                    style={{ width: 86, fontSize: 10.5, padding: "2px 4px" }}
+                    onChange={(e) => { setDeviceW(e.target.value ? +e.target.value : null); reloadFrame(); }}>
+                    <option value="">full width</option>
+                    <option value="1440">1440 laptop</option>
+                    <option value="1280">1280 small</option>
+                    <option value="834">834 tablet</option>
+                    <option value="390">390 phone</option>
+                  </select>
+                </label>
+              )}
+              <label className="flex items-center gap-1 shrink-0" title="Zoom the canvas out to see more of the page at once. Marks scale with it; this setting is yours alone.">
+                <select className="field ff-mono tnum" value={zoom}
+                  style={{ width: 62, fontSize: 10.5, padding: "2px 4px" }}
+                  onChange={(e) => setZoom(+e.target.value)}>
+                  {[1, 0.75, 0.5, 0.33, 0.25].map((z) => (
+                    <option key={z} value={z}>{Math.round(z * 100)}%</option>
+                  ))}
+                </select>
+              </label>
+              {!shot && (
+                <button className="btn btn-ghost px-1.5 py-1 shrink-0" onClick={reloadFrame}
+                  title="Reload the page in the frame — use after changing width, or if images below the fold never appeared">
+                  <Icon n="refresh" s={13} />
+                </button>
+              )}
+              <button className="btn btn-ghost px-1.5 py-1 shrink-0" onClick={() => setShowSource(true)} title="Mark up HTML instead">
+                <Icon n="upload" s={13} />
+              </button>
+            </div>
+
+            {/* frame + overlay */}
+            <div className="relative flex-1 min-h-0" style={{ background: "var(--panel)" }}>
+              <Palette tool={tool} setTool={setTool} color={color} setColor={setColor}
+                marks={mine.length} onUndo={undoMark} onClear={clearMarks} />
+
+              {/* One scroll container holds the page AND the ink, so they move together. */}
+              <div ref={scrollRef} className="absolute inset-0 overflow-auto scroll"
+                style={{ background: deviceW ? "var(--rail)" : "transparent" }}>
+                <div ref={surfaceRef} className="relative viewport-grid"
+                  style={{ height: shot ? "auto" : (docH ? docH + "px" : "100%"),
+                    minHeight: shot ? 0 : "100%", background: "#fff",
+                    width: deviceW ? deviceW + "px" : (100 / zoom) + "%",
+                    margin: deviceW ? "0 auto" : undefined,
+                    boxShadow: deviceW ? "var(--shadow-lg)" : undefined,
+                    zoom: zoom }}>
+
+                  {shot ? (
+                    <img src={shot.url} alt="Page under review" className="block w-full"
+                      style={{ height: "auto" }} draggable="false" />
+                  ) : (
+                    <iframe key={frameKey} ref={iframeRef} title="Review target"
+                      srcDoc={html || undefined} src={html ? undefined : frameSrc}
+                      sandbox={html ? "allow-same-origin" : undefined}
+                      onLoad={measure} scrolling="no"
+                      className="absolute inset-0 w-full h-full"
+                      style={{ border: 0, background: "#fff" }} />
+                  )}
+
+                  {/* pointer catcher — the measuring reference for every mark */}
+                  <div className="absolute inset-0"
+                    onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
+                    style={{
+                      pointerEvents: tool === "browse" ? "none" : "auto",
+                      touchAction: tool === "browse" ? "auto" : "none",
+                      cursor: tool === "text" ? "text" : "crosshair",
+                      zIndex: 10,
+                    }} />
+
+                  {/* ink: committed markups, then the stroke in progress */}
+                  <div className="absolute inset-0" style={{ pointerEvents: "none", zIndex: 14 }}>
+                    <Ink items={ordered} w={size.w} h={size.h} sel={sel} />
+                    {wip && <Ink items={[wip]} w={size.w} h={size.h} />}
+                  </div>
+
+                  {/* text labels */}
+                  <div className="absolute inset-0" style={{ pointerEvents: "none", zIndex: 16 }}>
+                    <Labels items={ordered} sel={sel} live={tool === "browse" ? false : true}
+                      onSelect={(id) => { setSel(id); setFilter("all"); }} />
+                  </div>
+
+                  {/* inline label composer */}
+                  {typing && (
+                    <div className="absolute rise" style={{ left: typing.x + "%", top: typing.y + "%", zIndex: 45, width: 240 }}>
+                      <textarea autoFocus rows={2} maxLength={280}
+                        className="field" style={{ fontSize: 13, borderColor: color, boxShadow: "var(--shadow-lg)" }}
+                        placeholder="Label text — Enter to place, Esc to cancel"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commitText(e.target.value, typing); }
+                          if (e.key === "Escape") setTyping(null);
+                        }}
+                        onBlur={(e) => commitText(e.target.value, typing)} />
+                    </div>
+                  )}
+
+                  {/* numbered badges for every markup */}
+                  <div className="absolute inset-0" style={{ pointerEvents: "none", zIndex: 20 }}>
+                    <Badges items={ordered} sel={sel}
+                      onSelect={(id) => { setSel(id); setFilter("all"); }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* blocked-frame fallback */}
+              {frameState === "blocked" && !html && !shot && (
+                <div className="absolute inset-0 grid place-items-center p-6" style={{ zIndex: 30, background: "var(--panel)" }}>
+                  <div className="rise text-center" style={{ maxWidth: "52ch" }}>
+                    <span className="inline-grid place-items-center rounded-lg mb-3"
+                      style={{ width: 38, height: 38, background: "var(--warn-soft)", color: "var(--warn)" }}>
+                      <Icon n="alert" s={19} />
+                    </span>
+                    <h3 className="text-base font-semibold mb-1.5">
+                      {host(session.target_url) || "That site"} can&rsquo;t be framed here
+                    </h3>
+                    <p className="text-sm mb-4" style={{ color: "var(--dim)", lineHeight: 1.6 }}>
+                      Either the site refuses embedding, or — more often on this hosted page —
+                      claude.ai&rsquo;s sandbox blocks loading other websites inside an artifact.
+                      Nothing to configure; it is a security boundary on the page, not on the site.
+                      Mark up a screenshot instead: everything works on it exactly the same.
+                    </p>
+                    <div className="flex gap-2 justify-center flex-wrap">
+                      <button className="btn btn-primary" onClick={() => setShowSource(true)}>
+                        <Icon n="upload" s={14} /> Add a screenshot
+                      </button>
+                      <button className="btn btn-quiet" onClick={() => setHtml(DEMO_HTML)}>
+                        <Icon n="eye" s={14} /> Use the sample page
+                      </button>
+                      <a className="btn btn-ghost" href={session.target_url} target="_blank" rel="noreferrer">
+                        Open the site in a tab
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {frameState === "loading" && !html && !shot && (
+                <div className="absolute inset-0 grid place-items-center" style={{ zIndex: 25, background: "var(--panel)" }}>
+                  <span className="flex items-center gap-2 text-sm" style={{ color: "var(--faint)" }}>
+                    <Icon n="refresh" s={15} cls="spin" /> Loading {host(session.target_url)}…
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+
+        {/* sidebar */}
+        {rail ? (
+          <aside className="flex flex-col items-center gap-3 py-3 px-2 border-l hairline" style={{ background: "var(--panel)", width: 52 }}>
+            <button className="btn btn-ghost px-1.5" onClick={() => setRail(false)} title="Expand comments">
+              <Icon n="left" s={16} />
+            </button>
+            <span className="ff-mono tnum text-xs" style={{ color: "var(--accent)" }}>{openCount}</span>
+            <span className="ff-mono tnum text-xs" style={{ color: "var(--ok)" }}>{doneCount}</span>
+          </aside>
+        ) : (
+          <aside className="flex flex-col border-l hairline overflow-hidden"
+            style={{ background: "var(--panel)", width: "min(352px, 42vw)", minWidth: 268, flex: "none" }}>
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b hairline">
+              <h2 className="text-sm font-semibold">Comments</h2>
+              <Chip>{ordered.length}</Chip>
+              <div className="flex-1" />
+              <button className="btn btn-ghost px-1.5" onClick={() => setRail(true)} title="Collapse">
+                <Icon n="right" s={16} />
+              </button>
+            </div>
+
+            <div className="px-3 py-2 border-b hairline">
+              <div className="seg">
+                {[["open", "Open", openCount], ["resolved", "Resolved", doneCount], ["all", "All", ordered.length]]
+                  .map(([k, lbl, n]) => (
+                    <button key={k} aria-pressed={filter === k} onClick={() => setFilter(k)} className="flex-1 justify-center">
+                      {lbl} <span className="ff-mono tnum" style={{ fontSize: 10.5, opacity: .7 }}>{n}</span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+
+            <div className="scroll flex-1 overflow-y-auto p-3 flex flex-col gap-2.5" style={{ background: "var(--rail)" }}>
+              {visible.length === 0 ? (
+                <div className="text-center py-10 px-4">
+                  <span className="inline-grid place-items-center rounded-lg mb-3"
+                    style={{ width: 34, height: 34, background: "var(--accent-soft)", color: "var(--accent)" }}>
+                    <Icon n="pin" s={17} />
+                  </span>
+                  <p className="text-sm font-medium mb-1">
+                    {ordered.length ? "Nothing in this view" : "Nothing marked up yet"}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--faint)", lineHeight: 1.6 }}>
+                    {ordered.length
+                      ? "Switch the filter above to see the rest."
+                      : "Pick any tool on the left and mark the page. Every stroke, box and pin opens its own comment here."}
+                  </p>
+                </div>
+              ) : visible.map((c) => (
+                <CommentCard key={c.id} c={c} n={numberOf(c.id)} selected={sel === c.id}
+                  autoFocus={fresh === c.id}
+                  onSelect={() => setSel(c.id)}
+                  onPatch={(f) => patch(c.id, f)}
+                  onDelete={() => remove(c.id)} />
+              ))}
+            </div>
+
+            <div className="p-3 border-t hairline flex items-center gap-2 min-w-0">
+              <button className="btn btn-quiet flex-1 justify-center min-w-0" onClick={exportMd} disabled={!ordered.length}>
+                <Icon n="download" s={14} /> Export summary
+              </button>
+              <span className="ff-mono text-xs truncate shrink-0" style={{ color: "var(--faint)", maxWidth: 72 }}
+                title={"Pinning as " + me}>{me}</span>
+            </div>
+          </aside>
+        )}
+      </div>
+
+      {showSource && <SourcePanel initial={html} busy={uploading}
+        hosted={/claude\.ai$/.test(window.location.hostname)}
+        onClose={() => setShowSource(false)} onShot={useShot}
+        onUse={(t) => { setHtml(t); setShot(null); setShowSource(false); setFrameState("ok"); }} />}
+      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
+      {showShare && <SharePanel onClose={() => setShowShare(false)} link={shareLink()}
+        code={session.id} backend={backend} onCopy={copy} />}
+
+      {toast && (
+        <div className="rise fixed bottom-4 left-1/2 -translate-x-1/2 rounded-lg px-3.5 py-2 text-sm"
+          style={{ background: "var(--text)", color: "var(--bg)", boxShadow: "var(--shadow-lg)", zIndex: 60 }}>
+          {toast}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────────────────────────────────────────────────────── app root */
+function App() {
+  const [backend, setBackend] = useState(null);
+  const [session, setSession] = useState(null);
+  const [me, setMe] = useState(() => { try { return localStorage.getItem("redline:name") || ""; } catch (e) { return ""; } });
+  const [booting, setBooting] = useState(true);
+
+  useEffect(() => { (async () => {
+    const b = await pickBackend();
+    setBackend(b);
+    const sid = new URLSearchParams(window.location.search).get("session");
+    if (sid) {
+      let s = null;
+      try { s = await b.getSession(sid); } catch (e) {}
+      setSession(s || { id: sid, target_url: "", created_at: nowISO() });
+    }
+    setBooting(false);
+  })(); }, []);
+
+  const start = async (targetUrl, htmlSeed) => {
+    const s = { id: uid(10), target_url: targetUrl || "", created_at: nowISO() };
+    try { await backend.putSession(s); } catch (e) {}
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.set("session", s.id);
+      window.history.replaceState({}, "", u.toString());
+    } catch (e) {}
+    setSession(htmlSeed ? Object.assign({}, s, { html: htmlSeed }) : s);
+  };
+
+  const join = async (code) => {
+    const sid = (code.match(/session=([a-z0-9]+)/i) || [null, code])[1];
+    let s = null;
+    try { s = await backend.getSession(sid); } catch (e) {}
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.set("session", sid);
+      window.history.replaceState({}, "", u.toString());
+    } catch (e) {}
+    setSession(s || { id: sid, target_url: "", created_at: nowISO() });
+  };
+
+  const leave = () => {
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.delete("session");
+      window.history.replaceState({}, "", u.toString());
+    } catch (e) {}
+    setSession(null);
+  };
+
+  const setName = (n) => { try { localStorage.setItem("redline:name", n); } catch (e) {} setMe(n); };
+
+  if (booting) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <span className="flex items-center gap-2 text-sm" style={{ color: "var(--faint)" }}>
+          <Icon n="refresh" s={15} cls="spin" /> Opening Redline…
+        </span>
+      </div>
+    );
+  }
+  if (!session) return <Landing onCreate={start} onJoin={join} />;
+  if (!me) return <NameGate onSet={setName} />;
+  return <Workspace session={session} me={me} backend={backend} onLeave={leave} />;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+</body>
+</html>
